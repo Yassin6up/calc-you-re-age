@@ -1,0 +1,86 @@
+body {
+    font-size: 15pt;
+}
+*{
+    margin: 0 auto;
+    padding: 0auto;
+    box-sizing: border-box;
+}
+h1{
+    margin-top:50px;
+        font-family: monospace;
+}
+
+input{
+    margin-top: 60px;
+    width:80%;
+    padding: 10px;
+    border-radius: 5px;
+    outline: none;
+    border: 2px solid #4B529E;
+    transition: 1s all;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 600;
+  
+}
+input:hover{
+    box-shadow: 0px 0px 10px #A226FF;
+    border-radius: 10px;
+}
+div{
+    display: flex;
+}
+button{
+    margin-top: 100px;
+    margin-left: 50px;
+    margin-right: 50px ;
+    padding: 10px;
+    width: 30%;
+    font-weight: 500;
+    font-size: 20px;
+    font-family: monospace;
+    border-radius: 10px 20px;
+    border: #A226FF 1px solid;
+    background-color: white;
+    transition: 1s all;
+}
+button:hover{
+   background-color:  #A226FF;
+   transform: scale(1.2);
+   color: white;
+}
+
+.output{
+    font-size: 25px;
+    text-shadow: 0px 0px 10px #A226FF;
+    text-decoration: underline #A226FF 2px ;
+    position: relative;
+    top: -190px;
+    display:grid;
+    justify-content: center;
+    align-items: center;
+}
+.copy{
+    width: 100%;
+    position: fixed;
+     
+     margin-top: 210px;
+     background-color: #262A35;
+     color: snow;
+     padding: 15px;
+     font-size: 10pt;
+    
+}
+form{
+   
+    border-radius: 20px;
+    width: 80%;
+    box-shadow: inset 0px 0px 10px #F6A9FF;
+    height: 550px;
+    position: relative;
+    top: 80px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    
+}
