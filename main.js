@@ -11,7 +11,7 @@ ok.addEventListener("click", function(ev) {
         input.style.borderColor = "red";
         input.setAttribute("placeholder", "Enter you're age !")
     } else {
-        result = 2022 - +input.value
+        result = 2023 - +input.value
         let ageMonth = +input.value * 12;
         
         
