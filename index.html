@@ -1,36 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>Calc you're age</title>
-
-    <!-- HTML -->
-
-
-    <!-- Custom Styles -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parchisi - Classic Board Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-    <center>
-        <h1>Hello world</h1>
-        <!-- inputs for age -->
-        <form>
-            <input id="input" type="tel" autofocus>
-            <div>
-                <button id="ok">Submit</button>
-                <button id="cancel">Cancel</button>
+    <div class="game-container">
+        <header>
+            <h1>Parchisi</h1>
+            <div class="game-info">
+                <div class="current-player">
+                    <span>Current Player: </span>
+                    <div class="player-indicator" id="currentPlayerIndicator"></div>
+                </div>
+                <div class="dice-container">
+                    <div class="dice" id="dice">
+                        <div class="dice-face">1</div>
+                    </div>
+                    <button id="rollDice" class="roll-btn">Roll Dice</button>
+                </div>
             </div>
-        </form>
-        <!--Output-->
-        <div class="copy">
-            Copy Right ® Yassin Elhardoufi
-        </div>
-        <script src="main.js"></script>
-</body>
+        </header>
 
+        <div class="game-board">
+            <!-- Center home area -->
+            <div class="center-home">
+                <div class="home-title">PARCHISI</div>
+            </div>
+
+            <!-- Player 1 (Red) - Bottom -->
+            <div class="player-area player-1">
+                <div class="player-info">
+                    <h3>Player 1</h3>
+                    <div class="tokens">
+                        <div class="token red" data-player="1" data-token="1" data-position="home">1</div>
+                        <div class="token red" data-player="1" data-token="2" data-position="home">2</div>
+                        <div class="token red" data-player="1" data-token="3" data-position="home">3</div>
+                        <div class="token red" data-player="1" data-token="4" data-position="home">4</div>
+                    </div>
+                </div>
+                <div class="home-area red-home"></div>
+            </div>
+
+            <!-- Player 2 (Green) - Right -->
+            <div class="player-area player-2">
+                <div class="player-info">
+                    <h3>Player 2</h3>
+                    <div class="tokens">
+                        <div class="token green" data-player="2" data-token="1" data-position="home">1</div>
+                        <div class="token green" data-player="2" data-token="2" data-position="home">2</div>
+                        <div class="token green" data-player="2" data-token="3" data-position="home">3</div>
+                        <div class="token green" data-player="2" data-token="4" data-position="home">4</div>
+                    </div>
+                </div>
+                <div class="home-area green-home"></div>
+            </div>
+
+            <!-- Player 3 (Yellow) - Top -->
+            <div class="player-area player-3">
+                <div class="player-info">
+                    <h3>Player 3</h3>
+                    <div class="tokens">
+                        <div class="token yellow" data-player="3" data-token="1" data-position="home">1</div>
+                        <div class="token yellow" data-player="3" data-token="2" data-position="home">2</div>
+                        <div class="token yellow" data-player="3" data-token="3" data-position="home">3</div>
+                        <div class="token yellow" data-player="3" data-token="4" data-position="home">4</div>
+                    </div>
+                </div>
+                <div class="home-area yellow-home"></div>
+            </div>
+
+            <!-- Player 4 (Blue) - Left -->
+            <div class="player-area player-4">
+                <div class="player-info">
+                    <h3>Player 4</h3>
+                    <div class="tokens">
+                        <div class="token blue" data-player="4" data-token="1" data-position="home">1</div>
+                        <div class="token blue" data-player="4" data-token="2" data-position="home">2</div>
+                        <div class="token blue" data-player="4" data-token="3" data-position="home">3</div>
+                        <div class="token blue" data-player="4" data-token="4" data-position="home">4</div>
+                    </div>
+                </div>
+                <div class="home-area blue-home"></div>
+            </div>
+
+            <!-- Game path cells -->
+            <div class="game-path">
+                <!-- Path cells will be generated by JavaScript -->
+            </div>
+
+            <!-- Safe zones -->
+            <div class="safe-zones">
+                <div class="safe-zone red-safe"></div>
+                <div class="safe-zone green-safe"></div>
+                <div class="safe-zone yellow-safe"></div>
+                <div class="safe-zone blue-safe"></div>
+            </div>
+        </div>
+
+        <div class="game-controls">
+            <button id="newGame" class="control-btn">New Game</button>
+            <button id="rules" class="control-btn">Rules</button>
+        </div>
+
+        <div class="game-messages" id="gameMessages"></div>
+    </div>
+
+    <!-- Rules Modal -->
+    <div id="rulesModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Parchisi Rules</h2>
+            <div class="rules-content">
+                <h3>Objective:</h3>
+                <p>Be the first player to move all 4 tokens from your home area to the center finish area.</p>
+                
+                <h3>How to Play:</h3>
+                <ul>
+                    <li>Roll a 6 to move a token out of your home area</li>
+                    <li>Move tokens clockwise around the board</li>
+                    <li>Land on an opponent's token to send it back to their home</li>
+                    <li>Land on your own token to create a "safe" position</li>
+                    <li>Tokens in safe positions cannot be captured</li>
+                    <li>You need exact dice roll to enter the finish area</li>
+                    <li>Roll a 6 to get an extra turn</li>
+                </ul>
+
+                <h3>Special Rules:</h3>
+                <ul>
+                    <li>If you roll three 6s in a row, your turn is forfeited</li>
+                    <li>You must move a token if possible</li>
+                    <li>If no moves are possible, your turn is skipped</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
 </html>
