@@ -358,10 +358,16 @@ class ParchisiGame {
     }
 
     movePiece(piece) {
+        const oldPosition = piece.position;
+        const pieceElement = document.querySelector(`[data-piece-id="${piece.id}"]`);
+        let newPosition;
+        let isFinishing = false;
+        
+        // Calculate new position
         if (piece.position === -1) {
             // Moving from home to starting position
-            piece.position = this.startingPositions[this.currentPlayer];
-            piece.pathIndex = this.getPathIndexFromPosition(piece.position);
+            newPosition = this.startingPositions[this.currentPlayer];
+            piece.pathIndex = this.getPathIndexFromPosition(newPosition);
             this.players[this.currentPlayer].homePieces--;
         } else if (piece.inHomePath) {
             // Moving in home path
@@ -370,12 +376,13 @@ class ParchisiGame {
             
             if (newHomeIndex >= this.homePaths[this.currentPlayer].length) {
                 // Piece finishes
+                isFinishing = true;
                 piece.finished = true;
-                piece.position = this.centerPosition;
+                newPosition = this.centerPosition;
                 this.players[this.currentPlayer].finishedPieces++;
                 this.logMessage(`${this.players[this.currentPlayer].name} finished a piece!`);
             } else {
-                piece.position = this.homePaths[this.currentPlayer][newHomeIndex];
+                newPosition = this.homePaths[this.currentPlayer][newHomeIndex];
             }
         } else {
             // Moving on main path
@@ -384,35 +391,161 @@ class ParchisiGame {
             if (newPathIndex >= Object.keys(this.paths).length) {
                 // Moving to home path
                 const overflow = newPathIndex - Object.keys(this.paths).length;
-                piece.position = this.homePaths[this.currentPlayer][overflow];
+                newPosition = this.homePaths[this.currentPlayer][overflow];
                 piece.inHomePath = true;
                 piece.pathIndex = -1;
             } else {
                 piece.pathIndex = newPathIndex;
-                piece.position = this.paths[newPathIndex];
+                newPosition = this.paths[newPathIndex];
             }
         }
         
-        // Check for captures
-        this.checkForCapture(piece);
+        // Animate the movement
+        this.animatePieceMovement(piece, oldPosition, newPosition, isFinishing, () => {
+            // Update piece position after animation
+            piece.position = newPosition;
+            
+            // Check for captures after movement
+            const capturedSomething = this.checkForCapture(piece);
+            
+            this.renderPieces();
+            this.updateUI();
+            
+            // Check for win condition
+            if (this.players[this.currentPlayer].finishedPieces === 4) {
+                setTimeout(() => this.endGame(), 500);
+                return;
+            }
+            
+            // Give extra turn for rolling 6 or capturing
+            if (this.diceValue === 6 || capturedSomething) {
+                if (this.diceValue === 6) {
+                    this.logMessage(`${this.players[this.currentPlayer].name} gets another turn for rolling 6!`);
+                }
+                this.gameState = 'waiting';
+                document.getElementById('roll-dice').disabled = false;
+            } else {
+                setTimeout(() => this.endTurn(), 300);
+            }
+        });
+    }
+
+    animatePieceMovement(piece, oldPosition, newPosition, isFinishing, callback) {
+        const pieceElement = document.querySelector(`[data-piece-id="${piece.id}"]`);
+        if (!pieceElement) return;
+
+        // Disable interactions during animation
+        this.gameState = 'moving';
+        document.getElementById('roll-dice').disabled = true;
         
-        this.renderPieces();
-        this.updateUI();
+        // Create path for multi-step animation
+        const movementPath = this.calculateMovementPath(oldPosition, newPosition, piece);
         
-        // Check for win condition
-        if (this.players[this.currentPlayer].finishedPieces === 4) {
-            this.endGame();
+        this.animateAlongPath(pieceElement, movementPath, 0, isFinishing, callback);
+    }
+
+    calculateMovementPath(oldPosition, newPosition, piece) {
+        const path = [];
+        
+        if (oldPosition === -1) {
+            // Moving from home to starting position
+            path.push(newPosition);
+        } else if (this.diceValue === 1) {
+            // Single step movement
+            path.push(newPosition);
+        } else {
+            // Multi-step movement
+            if (piece.inHomePath || (piece.pathIndex + this.diceValue >= Object.keys(this.paths).length)) {
+                // Handle home path movement
+                let currentPos = oldPosition;
+                for (let i = 1; i <= this.diceValue; i++) {
+                    if (piece.inHomePath) {
+                        const homePathIndex = this.homePaths[this.currentPlayer].indexOf(currentPos);
+                        if (homePathIndex + 1 < this.homePaths[this.currentPlayer].length) {
+                            currentPos = this.homePaths[this.currentPlayer][homePathIndex + 1];
+                            path.push(currentPos);
+                        } else {
+                            path.push(this.centerPosition);
+                            break;
+                        }
+                    } else {
+                        const currentPathIndex = this.getPathIndexFromPosition(currentPos);
+                        const nextPathIndex = currentPathIndex + 1;
+                        
+                        if (nextPathIndex >= Object.keys(this.paths).length) {
+                            // Enter home path
+                            const homePathPos = this.homePaths[this.currentPlayer][0];
+                            path.push(homePathPos);
+                            currentPos = homePathPos;
+                            piece.inHomePath = true;
+                        } else {
+                            currentPos = this.paths[nextPathIndex];
+                            path.push(currentPos);
+                        }
+                    }
+                }
+            } else {
+                // Normal path movement
+                const startPathIndex = piece.pathIndex;
+                for (let i = 1; i <= this.diceValue; i++) {
+                    const nextPathIndex = startPathIndex + i;
+                    path.push(this.paths[nextPathIndex]);
+                }
+            }
+        }
+        
+        return path;
+    }
+
+    animateAlongPath(pieceElement, path, pathIndex, isFinishing, callback) {
+        if (pathIndex >= path.length) {
+            // Animation complete
+            pieceElement.classList.remove('moving', 'jumping', 'entering');
+            if (isFinishing) {
+                pieceElement.classList.add('finishing');
+                setTimeout(() => {
+                    pieceElement.classList.remove('finishing');
+                    callback();
+                }, 1200);
+            } else {
+                callback();
+            }
             return;
         }
+
+        const targetPosition = path[pathIndex];
+        const targetCell = document.querySelector(`[data-position="${targetPosition}"]`);
         
-        // Give extra turn for rolling 6 or capturing
-        if (this.diceValue === 6) {
-            this.logMessage(`${this.players[this.currentPlayer].name} gets another turn for rolling 6!`);
-            this.gameState = 'waiting';
-            document.getElementById('roll-dice').disabled = false;
-        } else {
-            this.endTurn();
+        if (!targetCell) {
+            callback();
+            return;
         }
+
+        // Add movement classes
+        pieceElement.classList.add('moving');
+        
+        // Special animation for entering the game from home
+        if (pathIndex === 0 && path.length === 1) {
+            pieceElement.classList.add('entering');
+        } else if (pathIndex > 0) {
+            pieceElement.classList.add('jumping');
+        }
+
+        // Highlight the path
+        targetCell.classList.add('path-highlight');
+        setTimeout(() => {
+            targetCell.classList.remove('path-highlight');
+        }, 600);
+
+        // Move piece to target cell
+        targetCell.appendChild(pieceElement);
+
+        // Continue to next position with appropriate timing
+        const delay = (pathIndex === 0 && path.length === 1) ? 800 : 400;
+        setTimeout(() => {
+            pieceElement.classList.remove('jumping', 'entering');
+            this.animateAlongPath(pieceElement, path, pathIndex + 1, isFinishing, callback);
+        }, delay);
     }
 
     getPathIndexFromPosition(position) {
@@ -430,7 +563,7 @@ class ParchisiGame {
             movingPiece.inHomePath || 
             movingPiece.finished ||
             this.isHomeArea(movingPiece.position)) {
-            return;
+            return false;
         }
         
         // Check if any opponent pieces are on the same position
@@ -439,21 +572,40 @@ class ParchisiGame {
             
             for (let piece of this.players[player].pieces) {
                 if (piece.position === movingPiece.position && !piece.finished) {
-                    // Capture the piece
-                    piece.position = -1;
-                    piece.pathIndex = -1;
-                    piece.inHomePath = false;
-                    this.players[player].homePieces++;
+                    // Animate the capture
+                    this.animateCapture(piece, () => {
+                        // Capture the piece after animation
+                        piece.position = -1;
+                        piece.pathIndex = -1;
+                        piece.inHomePath = false;
+                        this.players[player].homePieces++;
+                        this.renderPieces();
+                        this.updateUI();
+                    });
                     
                     this.logMessage(`${this.players[this.currentPlayer].name} captured ${this.players[player].name}'s piece!`);
-                    
-                    // Give extra turn for capturing
-                    this.gameState = 'waiting';
-                    document.getElementById('roll-dice').disabled = false;
-                    break;
+                    return true;
                 }
             }
         }
+        return false;
+    }
+
+    animateCapture(capturedPiece, callback) {
+        const pieceElement = document.querySelector(`[data-piece-id="${capturedPiece.id}"]`);
+        if (!pieceElement) {
+            callback();
+            return;
+        }
+
+        // Add capture animation
+        pieceElement.classList.add('captured');
+        
+        // After animation, move piece back to home
+        setTimeout(() => {
+            pieceElement.classList.remove('captured');
+            callback();
+        }, 1000);
     }
 
     endTurn() {
